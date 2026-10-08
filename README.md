@@ -69,43 +69,58 @@ $$
 F:\mathbb{F}_2^n \rightarrow \mathbb{F}_2^m
 $$
 
-ShannonDiff computes:
+Boolean-Cryptographic-Metrics computes:
 
-- **ANF & Algebraic Degree:** Polynomial representation and maximum monomial degree of each output component.
+**1. ANF & Algebraic Degree**
 
-- **Dependency Matrix:** `D[i][j] = 1` if input bit `i` affects output bit `j`.
+Polynomial representation and maximum monomial degree of each output component.
 
-- **Diffusion Degree:** Minimum number of output components influenced by any input variable.
+**2. Dependency Matrix**
 
-  $$
-  d(F)=\min_i\sum_j D_{ij}
-  $$
+`D[i][j] = 1` if input bit `i` affects output bit `j`.
 
-- **Dependency Density:** Fraction of possible input-output dependencies present.
+**3. Diffusion Degree**
 
-  $$
-  \rho_D=\frac{\sum_{i,j}D_{ij}}{nm}
-  $$
+Minimum number of output components influenced by any input variable.
 
-- **Confusion Degree:** Number of input variables appearing in the ANF of every output component.
+$$
+d(F)=\min_i\sum_j D_{ij}
+$$
 
-  $$
-  c(F)=\left|\bigcap_j\Omega_j\right|
-  $$
+**4. Dependency Density**
 
-- **Avalanche Matrix:** Probability that output bit `j` flips when input bit `i` is toggled.
+Fraction of possible input-output dependencies present.
 
-  $$
-  A_{ij}=\Pr_x[f_j(x)\ne f_j(x\oplus e_i)]
-  $$
+$$
+\rho_D=\frac{\sum_{i,j}D_{ij}}{nm}
+$$
 
-- **SAC Metrics:** Mean and maximum deviation of avalanche probabilities from the ideal value `0.5`.
+**5. Confusion Degree**
 
-- **Normalized SAC Score:** `1 - 2 × mean SAC error`, a project-specific score between 0 and 1.
+Number of input variables appearing in the ANF of every output component.
+
+$$
+c(F)=\left|\bigcap_j\Omega_j\right|
+$$
+
+**6. Avalanche Matrix**
+
+Probability that output bit `j` flips when input bit `i` is toggled.
+
+$$
+A_{ij}=\Pr_x[f_j(x)\ne f_j(x\oplus e_i)]
+$$
+
+**7. SAC Metrics**
+
+Mean and maximum deviation of avalanche probabilities from the ideal value `0.5`.
+
+**8. Normalized SAC Score**
+
+`1 - 2 × mean SAC error`, a project-specific score between 0 and 1.
 
 The diffusion and confusion definitions follow the source paper for square transformations, extended analogously to rectangular transformations.
 
-The metrics being used here for assessment are: Dependency density, Diffusion degree, Confusion degree, ANF degree, Mean avalanche, Mean SAC deviation, Maximum SAC deviation, Normalized SAC score.
 
 ## Quick Start
 
