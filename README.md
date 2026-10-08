@@ -1,75 +1,177 @@
-# ShannonDiff
+# Boolean-Cryptographic-Metrics
 
-**Experimental analysis of diffusion and confusion in Boolean cryptographic transformations.**
+**Experimental analysis of structural diffusion, confusion, and avalanche behavior in Boolean cryptographic transformations.**
 
-Given a transformation `F : F_2^n -> F_2^m`, ShannonDiff computes
+This project investigates a central question:
 
-* **structural** diffusion/confusion measures `d(F)`, `c(F)` from the ANF and the dependency matrix, and
-* **empirical** bit-propagation measures: the avalanche matrix and the Strict Avalanche Criterion (SAC),
+> **Does greater structural diffusion and confusion necessarily imply better empirical avalanche behavior?**
 
-and asks the research question
+For a Boolean transformation , 
+$$
+F:\mathbb{F}_2^n \rightarrow \mathbb{F}_2^m
+$$
+the project extracts structural information from truth tables and Algebraic Normal Forms (ANFs), measures input-to-output dependencies, and compares these with bit-flip probabilities and the **Strict Avalanche Criterion (SAC)**.
 
-> Structural diffusion/confusion  <=>?  good avalanche behaviour
+**Main finding:** The experiments **partially support** an association between structural dependency and avalanche propagation. However, complete structural dependency does **not** guarantee balanced avalanche probabilities or perfect SAC.
 
+## What the project does
+
+- Builds truth tables and computes **ANFs** and component algebraic degrees.
+- Constructs **dependency matrices** and evaluates structural diffusion, dependency density, and confusion.
+- Computes **avalanche-probability matrices**, mean avalanche fraction, and SAC deviations using exhaustive inputs for the tested widths.
+- Analyzes **28 transformations**: 6 hand-designed toy functions, 20 synthetic functions, and 2 cryptographic S-boxes (**AES** and **PRESENT**).
+- Generates CSV results, dependency/avalanche heatmaps, and scatter plots comparing structural measures with empirical behavior.
+- Documents hypotheses, findings, counterexamples, and limitations in a [full analytical report](Structural_vs_Empirical_Metrics_Analysis.pdf).
+
+## Analysis report and key findings
+
+📄 **[Read the Structural vs Empirical Metrics Analysis (PDF)](Structural_vs_Empirical_Metrics_Analysis.pdf)**
+
+The report examines individual heatmaps, cross-function scatter plots, and controlled examples, including:
+
+| Transformation | Dependency density | Mean avalanche | Mean SAC deviation |
+|---|---:|---:|---:|
+| AES S-box | 1.0000 | 0.5049 | 0.0264 |
+| PRESENT S-box | 1.0000 | 0.6250 | 0.1250 |
+| Quadratic Mix | 1.0000 | 0.6667 | 0.1667 |
+| Cubic Mix | 1.0000 | 0.5833 | 0.2500 |
+| Dense Linear 1 | 0.7500 | 0.7500 | 0.5000 |
+| Medium Quadratic 3 | 0.9375 | 0.4688 | 0.0313 |
+
+**What these results show:**
+
+1. **Complete coverage is not enough:** AES S-box, PRESENT S-box, Quadratic Mix, and Cubic Mix all have dependency density 1, but substantially different SAC deviations.
+2. **More flips do not necessarily mean better balance:** Dense Linear 1 has mean avalanche 0.75 yet the maximum possible mean SAC deviation of 0.5.
+3. **Averages can hide weak pairs:** Medium Quadratic 3 has mean SAC deviation 0.0313, but one input-output pair has zero dependency and maximum SAC deviation 0.5.
+4. **Degree and confusion are not standalone predictors:** Transformations with similar structural metrics can still differ significantly in empirical avalanche behavior.
+
+These metrics describe aspects of Boolean transformations; they do **not**, by themselves, establish cryptographic security.
+
+## Methodology
+
+```text
+Boolean transformation F
+         |
+         +--> Truth table --> ANF --> Algebraic degree
+         |                         --> Dependency matrix --> Density / Diffusion / Confusion
+         |
+         +--> Input-bit flips --> Avalanche matrix --> Mean avalanche / SAC deviation
+                                               |
+                                 CSVs + heatmaps + scatter plots
+                                               |
+                                        Analytical report
 ```
-Boolean transformation F -> truth table -> ANF --+--> dependency matrix -> d(F), c(F)
-                                                 +--> bit-flip experiments -> avalanche matrix -> SAC
-                                                                      \-> comparison -> plots + report
+## Mathematical Metrics
+
+For a vector Boolean transformation:
+
+$$
+F:\mathbb{F}_2^n \rightarrow \mathbb{F}_2^m
+$$
+
+ShannonDiff computes:
+
+- **ANF & Algebraic Degree:** Polynomial representation and maximum monomial degree of each output component.
+
+- **Dependency Matrix:** `D[i][j] = 1` if input bit `i` affects output bit `j`.
+
+- **Diffusion Degree:** Minimum number of output components influenced by any input variable.
+
+  $$
+  d(F)=\min_i\sum_j D_{ij}
+  $$
+
+- **Dependency Density:** Fraction of possible input-output dependencies present.
+
+  $$
+  \rho_D=\frac{\sum_{i,j}D_{ij}}{nm}
+  $$
+
+- **Confusion Degree:** Number of input variables appearing in the ANF of every output component.
+
+  $$
+  c(F)=\left|\bigcap_j\Omega_j\right|
+  $$
+
+- **Avalanche Matrix:** Probability that output bit `j` flips when input bit `i` is toggled.
+
+  $$
+  A_{ij}=\Pr_x[f_j(x)\ne f_j(x\oplus e_i)]
+  $$
+
+- **SAC Metrics:** Mean and maximum deviation of avalanche probabilities from the ideal value `0.5`.
+
+- **Normalized SAC Score:** `1 - 2 × mean SAC error`, a project-specific score between 0 and 1.
+
+The diffusion and confusion definitions follow the source paper for square transformations, extended analogously to rectangular transformations.
+
+The metrics being used here for assessment are: Dependency density, Diffusion degree, Confusion degree, ANF degree, Mean avalanche, Mean SAC deviation, Maximum SAC deviation, Normalized SAC score.
+
+## Quick Start
+
+Clone the repository and navigate to the project directory:
+
+```bash
+git clone https://github.com/Chetna-mundra/Boolean-Cryptographic-Metrics.git
+cd Boolean-Cryptographic-Metrics
 ```
 
-## Quick start
+Install the required dependencies:
 
 ```bash
 pip install -r requirements.txt
-python -m pytest                              # 35 unit tests
-python experiments/run_experiments.py         # all experiments  (--quick for a fast run)
-python experiments/aes_sbox_experiment.py     # AES S-box case study
-jupyter notebook notebooks/exploratory_analysis.ipynb
 ```
 
-Results land in `results/tables/*.csv` and `results/plots/*.png`; the write-up is `report/findings.md`.
+Run the test suite:
 
-```python
-from src import analyze
-from experiments.test_functions import aes_sbox
-print(analyze(aes_sbox()))      # structural + empirical metrics in one dict
+```bash
+python -m pytest
 ```
 
-## Conventions
+### Run Experiments
 
-* Input `x` is an integer in `[0, 2^n)`; variable `x_i` is bit `i` (LSB = `x_0`). Same for outputs.
-* A monomial is a bit-mask of its variables; mask `0` is the constant `1`.
-* A truth table is an integer array `T` with `T[x] = F(x)`; exhaustive analysis works up to `n = 24`
-  (n <= 16 is comfortable for the full pipeline).
+Execute the analysis across the Boolean transformations:
 
-## Measures
-
-| Symbol | Meaning | Ideal |
-|---|---|---|
-| `D[j,i]` | output `f_j` depends on input `x_i` (appears in the ANF of `f_j`) | all 1 |
-| `d_F` | density of `D` (**primary d(F)**) | 1 |
-| `d_weighted` | graded variant using the fraction of monomials containing each variable | ~1 |
-| `c_F` | ANF density relative to a random function (**primary c(F)**) | ~1 |
-| `c_degree` | mean algebraic degree / n | ~1 |
-| `A[i,j]` | Pr over x that flipping `x_i` flips `f_j` | 0.5 |
-| `avalanche_effect` | mean of `A` | 0.5 |
-| `avalanche_score` | `1 - 2 mean abs(A - 1/2)` | 1 |
-| `sac_score` | `1 - 2 max abs(A - 1/2)`; equals 1 iff SAC holds exactly | 1 |
-
-### Important: match the paper's definitions
-
-`d_F` and `c_F` are my concrete instantiation of "structural diffusion/confusion". If your paper defines
-`d(F)` and `c(F)` differently, change **only** `diffusion_dependency` and `confusion_density` in
-`src/diffusion.py`; experiments, plots and correlation tables pick the change up automatically.
-
-## Layout
-
+```bash
+python run_experiments.py
 ```
-src/          boolean_functions, truth_table, anf, dependency, diffusion, avalanche, sac, utils
-experiments/  run_experiments.py, aes_sbox_experiment.py, test_functions.py (reference functions)
-tests/        test_anf.py, test_dependency.py, test_avalanche.py (also covers SAC)
-results/      tables/ (CSV), plots/ (PNG)
-notebooks/    exploratory_analysis.ipynb
-report/       findings.md
-pytest.ini    (adds the project root to the import path for the tests)
+
+This computes structural metrics (ANF degree, dependency density, diffusion, and confusion) and empirical metrics (avalanche probabilities and SAC deviations).
+
+### Generate Visualizations
+
+```bash
+python visualize.py
 ```
+
+This generates plots for comparing structural and empirical metrics, including dependency and avalanche heatmaps.
+
+### Experimental Results and Report
+
+The project evaluates **28 Boolean transformations**, including toy functions, synthetic transformations, and AES/PRESENT S-boxes.
+
+For the complete experimental findings, comparisons, and conclusions, see the [Structural vs Empirical Metrics Analysis Report](Structural_vs_Empirical_Metrics_Analysis.pdf).
+## Repository organization
+
+```text
+Boolean-Cryptographic-Metrics/
+├── src/                 # Boolean functions,ANF,dependency,diffusion,SAC
+├── tests/               # Unit tests
+├── results/             # CSV results, matrices, and plots
+├── Structural_vs_Empirical_Metrics_Analysis.pdf
+├── requirements.txt
+└── README.md
+```
+
+## Conventions and limitations
+
+- Inputs and outputs use least-significant-bit-first indexing: `x0` and `f0` are bit 0.
+- The reported 3-, 4-, and 8-bit experiments use exhaustive input enumeration and uniform input weighting.
+- This covers a deliberately selected set of 28 transformations; its results should not be generalized to all Boolean functions.
+- Normalized structural metrics make cross-width comparisons easier but do not remove all differences between function sizes and families.
+- ANF-based confusion, avalanche behavior, and SAC are **not** substitutes for differential uniformity, spectral nonlinearity, or a cryptographic security analysis.
+
+## References
+
+1. Li et al. (2016), *A New Approach to the Definition of Information Diffusion and Confusion of Boolean Transformation*. [Atlantis Press](https://doi.org/10.2991/icaita-16.2016.15).
+2. Golomb et al. (2002), *Claude Elwood Shannon (1916–2001)*. [Notices of the American Mathematical Society](https://www.ams.org/notices/200201/fea-shannon.pdf).
